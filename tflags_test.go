@@ -2,6 +2,8 @@ package tflags
 
 import "testing"
 
+//TODO: use assertions package
+
 func TestParseBool(t *testing.T) {
 
 	jamesFlag := false
