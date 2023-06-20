@@ -1,6 +1,11 @@
 package tflags
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
+
+const ExitCode = 1
 
 type flag struct {
 	pbool *bool
@@ -53,6 +58,7 @@ func Parse() {
 
 func ParseThem(args []string) {
 	n := len(args)
+
 	for i := 0; i < n; i++ {
 		arg := args[i]
 		flag, ok := flags[arg]
@@ -66,15 +72,29 @@ func ParseThem(args []string) {
 			continue
 		}
 
+		next := nextArg(i, args)
+		i++
+
 		if flag.pstring != nil {
-			//TODO: range check
+			*flag.pstring = next
 		}
 
 		if flag.pint != nil {
 			//TODO: range check
 		}
 	}
+}
 
+func nextArg(current int, all []string) string {
+	next := current + 1 
+	if len(all) <= next {
+		fmt.Fprintf(os.Stderr, 
+			"Argument '%s' expects an argument, none provided\n", 
+			all[current],
+		);
+		os.Exit(ExitCode)
+	}
+	return all[next]
 }
 
 func Unmatched() []string {

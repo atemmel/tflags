@@ -2,7 +2,7 @@ package tflags
 
 import "testing"
 
-func TestParse(t *testing.T) {
+func TestParseBool(t *testing.T) {
 
 	jamesFlag := false
 	bondFlag := false
@@ -34,5 +34,22 @@ func TestParse(t *testing.T) {
 
 	if other[0] != "is" {
 		t.Errorf("did not catch 'is' flag")
+	}
+}
+
+func TestParseString(t *testing.T) {
+	strFlag := ""
+
+	String(&strFlag, Meta{Long: "string", Short: "s", Help: ""})
+
+	args := []string{
+		"-s",
+		"jocke",
+	}
+
+	ParseThem(args)
+
+	if strFlag == "" {
+		t.Errorf("string flag not caught")
 	}
 }
