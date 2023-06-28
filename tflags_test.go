@@ -2,15 +2,13 @@ package tflags
 
 import "testing"
 
-//TODO: use assertions package
-
 func TestParseBool(t *testing.T) {
 
 	jamesFlag := false
 	bondFlag := false
 
-	Bool(&jamesFlag, Meta{Long: "james", Short: "j", Help: ""})
-	Bool(&bondFlag, Meta{Long: "bond", Short: "b", Help: ""})
+	Bool(&jamesFlag, &Meta{Long: "james", Short: "j", Help: ""})
+	Bool(&bondFlag, &Meta{Long: "bond", Short: "b", Help: ""})
 
 	args := []string{
 		"--james",
@@ -42,7 +40,7 @@ func TestParseBool(t *testing.T) {
 func TestParseString(t *testing.T) {
 	strFlag := ""
 
-	String(&strFlag, Meta{Long: "string", Short: "s", Help: ""})
+	String(&strFlag, &Meta{Long: "string", Short: "s", Help: ""})
 
 	args := []string{
 		"-s",
@@ -54,4 +52,40 @@ func TestParseString(t *testing.T) {
 	if strFlag == "" {
 		t.Errorf("string flag not caught")
 	}
+}
+
+func TestParseInt(t *testing.T) {
+	intFlag := 0
+
+	Int(&intFlag, &Meta{Long: "int", Short: "i", Help: ""})
+
+	args := []string{
+		"-i",
+		"5",
+	}
+
+	ParseThem(args)
+
+	if intFlag == 0 {
+		t.Errorf("int flag not caught")
+	}
+}
+
+func TestHelp(t *testing.T) {
+	jamesFlag := false
+	bondFlag := false
+	strFlag := ""
+	intFlag := 0
+
+	Bool(&jamesFlag, &Meta{Long: "james", Short: "j", Help: "a"})
+	Bool(&bondFlag, &Meta{Long: "bond", Short: "b", Help: "b"})
+	String(&strFlag, &Meta{Long: "", Short: "s", Help: "c"})
+	Int(&intFlag, &Meta{Long: "int", Short: "i", Help: "d"})
+
+	args := []string{
+		"-h",
+	}
+
+	_ = args
+	//ParseThem(args)
 }
