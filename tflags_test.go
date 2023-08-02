@@ -72,13 +72,22 @@ func TestParseInt(t *testing.T) {
 }
 
 func TestHelp(t *testing.T) {
+
+	makefn := func(_ []string) {}
+	lsfn := func(_ []string) {}
+	pwdfn := func(_ []string) {}
+	valgrindfn := func(_ []string) {}
+
+	Cmd(lsfn, "ls", "list files")
+	Cmd(makefn, "make", "make recipe")
+	Cmd(pwdfn, "pwd", "print working directory")
+	Cmd(valgrindfn, "valgrind", "debug memory leaks")
+
 	jamesFlag := false
 	bondFlag := false
 	strFlag := ""
 	intFlag := 0
-	fn := func(_ []string) {}
 
-	Cmd(fn, "fn", "call function")
 	Bool(&jamesFlag, &Meta{Long: "james", Short: "j", Help: "help for james"})
 	Bool(&bondFlag, &Meta{Long: "bond", Short: "b", Help: "help for bond"})
 	String(&strFlag, &Meta{Long: "", Short: "s", Help: "help for s"})

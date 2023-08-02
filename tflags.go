@@ -11,54 +11,14 @@ import (
 const BadExitCode = 1
 const HelpExitCode = 0
 
-type flag struct {
-	pbool *bool
-	pint *int
-	pstring *string
-}
-
-type byShort struct { Meta []*Meta }
-
-func (m byShort) Len() int {
-	return len(m.Meta)
-}
-
-func (m byShort) Swap(i, j int) {
-	m.Meta[i], m.Meta[j] = m.Meta[j], m.Meta[i]
-}
-
-func (m byShort) Less(i, j int) bool {
-	return m.Meta[i].Short < m.Meta[j].Short
-}
-
-type cmdfn func([]string)
-
-type cmd struct {
-	fn cmdfn
-	help string
-}
-
-var(
+var (
 	cmds = map[string]cmd{}
-	flags = map[string]flag{}
 	cmdMetas = []*cmdMeta{}
+	flags = map[string]flag{}
 	flagMetas = []*Meta{}
 	unmatched = []string{}
-
 	About = ""
 )
-
-type Meta struct {
-	Long string
-	Short string
-	Help string
-}
-
-type cmdMeta struct {
-	Name string
-	Help string
-}
-
 
 func String(s *string, meta *Meta) {
 	flagMetas = append(flagMetas, meta)
@@ -107,9 +67,12 @@ func Parse() *cmdfn {
 
 func ParseThem(args []string, exitOnHelp bool) *cmdfn {
 	defer func(){
+		cmds = map[string]cmd{}
+		cmdMetas = cmdMetas[:0]
+		flags = map[string]flag{}
 		flagMetas = flagMetas[:0]
-		flags = make(map[string]flag)
 	}()
+
 	var err error
 	n := len(args)
 
@@ -188,6 +151,33 @@ func Help() {
 }
 
 func HelpForeword(foreword string) {
+	if About != "" {
+		fmt.Fprintln(os.Stderr, About)
+	}
+	helpCmds()
+	if len(cmdMetas) > 0 {
+		fmt.Fprintln(os.Stderr)
+	}
+	helpFlags()
+}
+
+func helpCmds() {
+	sort.Sort(byName{cmdMetas})
+	max := 0
+	for _, m := range cmdMetas {
+		if len(m.Name) > max {
+			max = len(m.Name)
+		}
+	}
+	for _, m := range cmdMetas {
+		fmt.Fprintf(os.Stderr, "  %s", m.Name)
+		offset := len(m.Name)
+		pad(2 + max - offset, os.Stderr)
+		fmt.Fprintf(os.Stderr, "%s\n", m.Help)
+	}
+}
+
+func helpFlags() {
 	sort.Sort(byShort{flagMetas})
 	max := 0
 	for _, m := range flagMetas {
