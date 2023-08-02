@@ -16,7 +16,7 @@ func TestParseBool(t *testing.T) {
 		"-b",
 	}
 
-	ParseThem(args)
+	ParseThem(args, false)
 
 	if !jamesFlag {
 		t.Errorf("jamesFlag was not true")
@@ -47,7 +47,7 @@ func TestParseString(t *testing.T) {
 		"jocke",
 	}
 
-	ParseThem(args)
+	ParseThem(args, false)
 
 	if strFlag == "" {
 		t.Errorf("string flag not caught")
@@ -64,7 +64,7 @@ func TestParseInt(t *testing.T) {
 		"5",
 	}
 
-	ParseThem(args)
+	ParseThem(args, false)
 
 	if intFlag == 0 {
 		t.Errorf("int flag not caught")
@@ -76,16 +76,17 @@ func TestHelp(t *testing.T) {
 	bondFlag := false
 	strFlag := ""
 	intFlag := 0
+	fn := func(_ []string) {}
 
-	Bool(&jamesFlag, &Meta{Long: "james", Short: "j", Help: "a"})
-	Bool(&bondFlag, &Meta{Long: "bond", Short: "b", Help: "b"})
-	String(&strFlag, &Meta{Long: "", Short: "s", Help: "c"})
-	Int(&intFlag, &Meta{Long: "int", Short: "i", Help: "d"})
+	Cmd(fn, "fn", "call function")
+	Bool(&jamesFlag, &Meta{Long: "james", Short: "j", Help: "help for james"})
+	Bool(&bondFlag, &Meta{Long: "bond", Short: "b", Help: "help for bond"})
+	String(&strFlag, &Meta{Long: "", Short: "s", Help: "help for s"})
+	Int(&intFlag, &Meta{Long: "int", Short: "i", Help: "help for int"})
 
 	args := []string{
 		"-h",
 	}
 
-	_ = args
-	//ParseThem(args)
+	ParseThem(args, false)
 }

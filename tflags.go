@@ -9,7 +9,7 @@ import (
 )
 
 const BadExitCode = 1
-const HelpExitCode = 2
+const HelpExitCode = 0
 
 type flag struct {
 	pbool *bool
@@ -31,9 +31,18 @@ func (m byShort) Less(i, j int) bool {
 	return m.Meta[i].Short < m.Meta[j].Short
 }
 
+type cmdfn func([]string)
+
+type cmd struct {
+	fn cmdfn
+	help string
+}
+
 var(
+	cmds = map[string]cmd{}
 	flags = map[string]flag{}
-	metas = []*Meta{}
+	cmdMetas = []*cmdMeta{}
+	flagMetas = []*Meta{}
 	unmatched = []string{}
 
 	About = ""
@@ -45,8 +54,14 @@ type Meta struct {
 	Help string
 }
 
+type cmdMeta struct {
+	Name string
+	Help string
+}
+
+
 func String(s *string, meta *Meta) {
-	metas = append(metas, meta)
+	flagMetas = append(flagMetas, meta)
 	if meta.Short != "" {
 		flags["-" + meta.Short] = sflag(s)
 	}
@@ -56,7 +71,7 @@ func String(s *string, meta *Meta) {
 }
 
 func Int(i *int, meta *Meta) {
-	metas = append(metas, meta)
+	flagMetas = append(flagMetas, meta)
 	if meta.Short != "" {
 		flags["-" + meta.Short] = iflag(i)
 	}
@@ -66,7 +81,7 @@ func Int(i *int, meta *Meta) {
 }
 
 func Bool(b *bool, meta *Meta) {
-	metas = append(metas, meta)
+	flagMetas = append(flagMetas, meta)
 	if meta.Short != "" {
 		flags["-" + meta.Short] = bflag(b)
 	}
@@ -75,13 +90,24 @@ func Bool(b *bool, meta *Meta) {
 	}
 }
 
-func Parse() {
-	ParseThem(os.Args)
+func Cmd(fn cmdfn, name, help string) {
+	cmds[name] = cmd{
+		fn: fn,
+		help: help,
+	}
+	cmdMetas = append(cmdMetas, &cmdMeta{
+		Name: name,
+		Help: help,
+	})
 }
 
-func ParseThem(args []string) {
+func Parse() *cmdfn {
+	return ParseThem(os.Args, true)
+}
+
+func ParseThem(args []string, exitOnHelp bool) *cmdfn {
 	defer func(){
-		metas = metas[:0]
+		flagMetas = flagMetas[:0]
 		flags = make(map[string]flag)
 	}()
 	var err error
@@ -89,9 +115,14 @@ func ParseThem(args []string) {
 
 	for i := 0; i < n; i++ {
 		arg := args[i]
-		checkHelp(arg)
+		checkHelp(arg, exitOnHelp)
 		flag, ok := flags[arg]
 		if !ok {
+			cmd, ok := cmds[arg]
+			if ok {
+				unmatched = args[i:]
+				return &cmd.fn
+			}
 			unmatched = append(unmatched, arg)
 			continue
 		} 
@@ -120,6 +151,7 @@ func ParseThem(args []string) {
 			}
 		}
 	}
+	return nil
 }
 
 func nextArg(current int, all []string) string {
@@ -134,7 +166,7 @@ func nextArg(current int, all []string) string {
 	return all[next]
 }
 
-func checkHelp(arg string) {
+func checkHelp(arg string, exit bool) {
 	helpFlags := []string{
 		"-h",
 		"-help",
@@ -142,12 +174,13 @@ func checkHelp(arg string) {
 	}
 	for _, h := range helpFlags {
 		if arg == h {
-			goto SHOW
+			Help()
+			if exit {
+				os.Exit(HelpExitCode)
+			}
+			return
 		}
 	}
-	return
-	SHOW:
-	Help()
 }
 
 func Help() {
@@ -155,24 +188,25 @@ func Help() {
 }
 
 func HelpForeword(foreword string) {
-	sort.Sort(byShort{metas})
+	sort.Sort(byShort{flagMetas})
 	max := 0
-	for _, m := range metas {
+	for _, m := range flagMetas {
 		if len(m.Long) > max {
 			max = len(m.Long)
 		}
 	}
-	for _, m := range metas {
+	for _, m := range flagMetas {
 		fmt.Fprintf(os.Stderr, "  -%s", m.Short)
 		offset := len(m.Long)
 		if m.Long != "" {
 			fmt.Fprintf(os.Stderr, ", --%s", m.Long)
 			offset += 6
+		} else {
+			offset += 2
 		}
 		pad(8 + max - offset, os.Stderr)
 		fmt.Fprintf(os.Stderr, "%s\n", m.Help)
 	}
-	os.Exit(HelpExitCode)
 }
 
 func pad(n int, w io.Writer) {
