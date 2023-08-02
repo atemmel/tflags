@@ -99,3 +99,22 @@ func TestHelp(t *testing.T) {
 
 	ParseThem(args, false)
 }
+
+func TestCmd(t* testing.T) {
+	cmdfn := func(_ []string) {}
+	flag := false
+
+	Cmd(cmdfn, "cmd", "help for cmd")
+	Bool(&flag, &Meta{Long: "flag", Short: "f", Help: "Help for flag"})
+
+	args := []string{
+		"cmd",
+		"-f",
+	}
+
+	ParseThem(args, false)
+
+	if flag {
+		t.Errorf("flag was not false")
+	}
+}
