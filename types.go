@@ -1,9 +1,7 @@
 package tflags
 
-type cmdfn func([]string)
-
 type cmd struct {
-	fn cmdfn
+	fn func([]string)
 	help string
 }
 

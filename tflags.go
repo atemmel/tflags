@@ -50,7 +50,7 @@ func Bool(b *bool, meta *Meta) {
 	}
 }
 
-func Cmd(fn cmdfn, name, help string) {
+func Cmd(fn func([]string), name, help string) {
 	cmds[name] = cmd{
 		fn: fn,
 		help: help,
@@ -61,11 +61,11 @@ func Cmd(fn cmdfn, name, help string) {
 	})
 }
 
-func Parse() *cmdfn {
+func Parse() *func([]string) {
 	return ParseThem(os.Args, true)
 }
 
-func ParseThem(args []string, exitOnHelp bool) *cmdfn {
+func ParseThem(args []string, exitOnHelp bool) *func([]string) {
 	defer func(){
 		cmds = map[string]cmd{}
 		cmdMetas = cmdMetas[:0]
