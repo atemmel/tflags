@@ -73,6 +73,7 @@ func ParseThem(args []string, exitOnHelp bool) *func([]string) {
 		flagMetas = flagMetas[:0]
 	}()
 
+	unmatched = unmatched[:0]
 	var err error
 	n := len(args)
 
